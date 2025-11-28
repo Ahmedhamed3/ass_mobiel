@@ -1,38 +1,52 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+class Course {
+  Course({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.userId,
+    this.createdAt,
+  });
 
-class AuthService {
-  AuthService._();
-  static final AuthService instance = AuthService._();
+  final String id;
+  final String title;
+  final String description;
+  final String userId;
+  final DateTime? createdAt;
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  factory Course.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data() ?? <String, dynamic>{};
+    final timestamp = data['createdAt'] as Timestamp?;
+
+  return Course(
+      id: doc.id,
+      title: data['title'] as String? ?? '',
+      description: data['description'] as String? ?? '',
+      userId: data['userId'] as String? ?? '',
+      createdAt: timestamp?.toDate(),
+    );
+
+    Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'description': description,
+      'userId': userId,
+      'createdAt': FieldValue.serverTimestamp(),
+    };
+  }
+}
+}
+
+class CourseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-
-  User? get currentUser => _auth.currentUser;
-  Stream<User?> authChanges() => _auth.authStateChanges();
-
-  Future<UserCredential> register({
-    required String name,
-    required String email,
-    required String password,
-  }) async {
-    final credential = await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-
-    final uid = credential.user!.uid;
-    await _db.collection('users').doc(uid).set(
-      {
-        'uid': uid,
-        'name': name,
-        'email': email,
-        'createdAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
-
-    return credential;
+    Stream<List<Course>> coursesForUser(String uid) {
+    return _db
+        .collection('courses')
+        .where('userId', isEqualTo: uid)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Course.fromDoc(doc)).toList());
   }
 
   Future<UserCredential> signIn({
@@ -42,5 +56,5 @@ class AuthService {
     return _auth.signInWithEmailAndPassword(email: email, password: password);
   }
 
-  Future<void> signOut() => _auth.signOut();
+  
 }
