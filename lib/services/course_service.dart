@@ -1,60 +1,37 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-class Course {
-  Course({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.userId,
-    this.createdAt,
-  });
+import '../models/course.dart';
 
-  final String id;
-  final String title;
-  final String description;
-  final String userId;
-  final DateTime? createdAt;
+  class CourseService {
+  CourseService({FirebaseFirestore? firestore})
+      : _db = firestore ?? FirebaseFirestore.instance;
 
-  factory Course.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data() ?? <String, dynamic>{};
-    final timestamp = data['createdAt'] as Timestamp?;
+    final FirebaseFirestore _db;
 
-  return Course(
-      id: doc.id,
-      title: data['title'] as String? ?? '',
-      description: data['description'] as String? ?? '',
-      userId: data['userId'] as String? ?? '',
-      createdAt: timestamp?.toDate(),
-    );
 
-    Map<String, dynamic> toMap() {
-    return {
-      'title': title,
-      'description': description,
-      'userId': userId,
-      'createdAt': FieldValue.serverTimestamp(),
-    };
-  }
-}
-}
-
-class CourseService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-    Stream<List<Course>> coursesForUser(String uid) {
+Stream<List<Course>> coursesForUser(String uid) {
     return _db
         .collection('courses')
         .where('userId', isEqualTo: uid)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => Course.fromDoc(doc)).toList());
+        .map(
+          (snapshot) => snapshot.docs.map(Course.fromDoc).toList(),
+        );
   }
 
-  Future<UserCredential> signIn({
-    required String email,
-    required String password,
+  Future<void> addCourse({
+    required String title,
+    required String description,
+    required String userId,
   }) async {
-    return _auth.signInWithEmailAndPassword(email: email, password: password);
-  }
-
+    final course = Course(
+      id: '',
+      title: title,
+      description: description,
+      userId: userId,
+      createdAt: null,
+    );
   
+await _db.collection('courses').add(course.toMap());
+  }
 }

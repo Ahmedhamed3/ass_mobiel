@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/course_service.dart';
+import '../models/course.dart';
 
 class CourseCard extends StatelessWidget {
   const CourseCard({super.key, required this.course});
@@ -18,7 +18,10 @@ class CourseCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.menu_book_rounded, color: Theme.of(context).colorScheme.primary),
+                Icon(
+                  Icons.menu_book_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -47,7 +50,8 @@ class CourseCard extends StatelessWidget {
               style: Theme.of(context)
                   .textTheme
                   .labelMedium
-                  ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ],
         ),
